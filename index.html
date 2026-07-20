@@ -3,102 +3,142 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>gauravz7 — projects</title>
-<meta name="description" content="Projects and write-ups by gauravz7 — AI agents, MCP, and practical builds.">
+<title>gauravz7 — projects &amp; write-ups</title>
+<meta name="description" content="Practical work on AI agents, the standards that connect them (MCP & Skills), and tools that solve real problems — by gauravz7.">
+
+<!-- social share cards -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gauravz7.github.io/">
+<meta property="og:title" content="gauravz7 — projects & write-ups">
+<meta property="og:description" content="AI agents, MCP & Skills, and practical builds — including a WhatsApp house-manager you can build yourself.">
+<meta property="og:image" content="https://gauravz7.github.io/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="gauravz7 — projects & write-ups">
+<meta name="twitter:description" content="AI agents, MCP & Skills, and practical builds.">
+<meta name="twitter:image" content="https://gauravz7.github.io/og.svg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+
 <style>
   :root{
-    --paper:#F7F6F2; --surface:#FFFFFF; --ink:#1A1E1C; --muted:#666E67;
-    --accent:#0E7C6F; --accent-soft:#0e7c6f12; --rule:#E4E2DA;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --paper:#F6F5F1; --surface:#FFFFFF; --ink:#181C1A; --muted:#5F675F; --faint:#8A9188;
+    --accent:#0C7A6D; --accent-2:#C98A2B; --accent-soft:#0c7a6d10; --rule:#E5E3DB; --shadow:0 1px 2px rgba(20,30,26,.04),0 10px 30px -12px rgba(20,30,26,.12);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,sans-serif;
     --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   }
   @media (prefers-color-scheme:dark){
-    :root{--paper:#0F1211;--surface:#171B19;--ink:#E9EAE4;--muted:#9AA095;
-      --accent:#45B7A6;--accent-soft:#45b7a615;--rule:#262C28;}
+    :root{--paper:#0E1210;--surface:#161B18;--ink:#EAEBE5;--muted:#9AA095;--faint:#6E766C;
+      --accent:#46B9A8;--accent-2:#E0AF5C;--accent-soft:#46b9a814;--rule:#252C27;--shadow:0 1px 2px rgba(0,0,0,.3),0 14px 40px -16px rgba(0,0,0,.55);}
   }
-  :root[data-theme="light"]{--paper:#F7F6F2;--surface:#FFFFFF;--ink:#1A1E1C;--muted:#666E67;--accent:#0E7C6F;--accent-soft:#0e7c6f12;--rule:#E4E2DA;}
-  :root[data-theme="dark"]{--paper:#0F1211;--surface:#171B19;--ink:#E9EAE4;--muted:#9AA095;--accent:#45B7A6;--accent-soft:#45b7a615;--rule:#262C28;}
+  :root[data-theme="light"]{--paper:#F6F5F1;--surface:#FFFFFF;--ink:#181C1A;--muted:#5F675F;--faint:#8A9188;--accent:#0C7A6D;--accent-2:#C98A2B;--accent-soft:#0c7a6d10;--rule:#E5E3DB;--shadow:0 1px 2px rgba(20,30,26,.04),0 10px 30px -12px rgba(20,30,26,.12);}
+  :root[data-theme="dark"]{--paper:#0E1210;--surface:#161B18;--ink:#EAEBE5;--muted:#9AA095;--faint:#6E766C;--accent:#46B9A8;--accent-2:#E0AF5C;--accent-soft:#46b9a814;--rule:#252C27;--shadow:0 1px 2px rgba(0,0,0,.3),0 14px 40px -16px rgba(0,0,0,.55);}
 
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
-    line-height:1.6;-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:52rem;margin:0 auto;padding:clamp(3rem,8vw,6rem) 1.5rem 5rem;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    background-image:radial-gradient(120% 60% at 100% 0%, var(--accent-soft), transparent 60%);
+    background-repeat:no-repeat;}
+  .wrap{max-width:54rem;margin:0 auto;padding:clamp(3rem,7vw,5.5rem) 1.5rem 4rem;}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;}}
 
-  header{margin-bottom:3rem;}
-  .handle{font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;color:var(--accent);
-    display:inline-flex;align-items:center;gap:.5rem;margin:0 0 1.2rem;}
-  .handle::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);}
-  h1{font-size:clamp(2rem,6vw,2.9rem);font-weight:800;letter-spacing:-.025em;line-height:1.08;
-    margin:0 0 .8rem;text-wrap:balance;}
-  .tagline{font-size:1.2rem;color:var(--muted);max-width:34rem;margin:0;text-wrap:pretty;}
+  /* hero */
+  header{margin-bottom:3.4rem;}
+  .id{display:flex;align-items:center;gap:.7rem;margin-bottom:1.6rem;}
+  .mark{width:38px;height:38px;border-radius:10px;background:var(--ink);color:var(--paper);
+    font-family:var(--mono);font-weight:700;font-size:.9rem;display:grid;place-items:center;letter-spacing:-.02em;}
+  .handle{font-family:var(--mono);font-size:.82rem;color:var(--muted);}
+  .handle b{color:var(--ink);font-weight:600;}
+  h1{font-size:clamp(2.1rem,5.6vw,3.1rem);font-weight:800;letter-spacing:-.028em;line-height:1.06;
+    margin:0 0 1rem;text-wrap:balance;}
+  h1 .u{background:linear-gradient(transparent 68%, var(--accent-soft) 68%);}
+  .bio{font-size:1.18rem;color:var(--muted);max-width:33rem;margin:0 0 1.6rem;text-wrap:pretty;}
+  .links{display:flex;flex-wrap:wrap;gap:.6rem;}
+  .links a{font-family:var(--mono);font-size:.82rem;text-decoration:none;color:var(--ink);
+    border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:.4rem .85rem;
+    transition:border-color .15s ease,color .15s ease;}
+  .links a:hover{border-color:var(--accent);color:var(--accent);}
 
-  .eyebrow{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;
-    color:var(--muted);margin:0 0 1.1rem;}
+  /* section label */
+  .label{display:flex;align-items:center;gap:.8rem;margin:0 0 1.3rem;
+    font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;color:var(--faint);}
+  .label::after{content:"";height:1px;flex:1;background:var(--rule);}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;}
-  a.card{display:flex;flex-direction:column;gap:.55rem;text-decoration:none;color:inherit;
-    background:var(--surface);border:1px solid var(--rule);border-radius:14px;
-    padding:1.4rem 1.5rem;transition:border-color .15s ease, transform .15s ease;}
-  a.card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  /* project cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr));gap:1.1rem;}
+  a.card{position:relative;display:flex;flex-direction:column;gap:.6rem;text-decoration:none;color:inherit;
+    background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:1.5rem 1.6rem;
+    box-shadow:var(--shadow);transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease;}
+  a.card:hover{border-color:var(--accent);transform:translateY(-3px);}
   a.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
-  .tag{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;
-    color:var(--accent);background:var(--accent-soft);align-self:flex-start;
-    padding:.2rem .5rem;border-radius:6px;}
-  .card h2{font-size:1.24rem;font-weight:700;letter-spacing:-.01em;margin:.1rem 0 0;}
-  .card p{margin:0;color:var(--muted);font-size:.96rem;flex:1;}
-  .go{font-family:var(--mono);font-size:.82rem;color:var(--accent);margin-top:.3rem;}
-  .card .sub{font-family:var(--mono);font-size:.74rem;color:var(--muted);}
-  .card .sub a{color:var(--muted);text-decoration:underline;text-underline-offset:2px;}
+  .tag{align-self:flex-start;font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.11em;
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--rule);padding:.22rem .55rem;border-radius:7px;}
+  .card h2{font-size:1.3rem;font-weight:750;letter-spacing:-.015em;margin:.15rem 0 0;}
+  .card p{margin:0;color:var(--muted);font-size:.97rem;flex:1;}
+  .meta-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.4rem;}
+  .go{font-family:var(--mono);font-size:.8rem;color:var(--accent);}
+  a.card:hover .go .arw{transform:translateX(3px);}
+  .arw{display:inline-block;transition:transform .16s ease;}
+  .sub{font-family:var(--mono);font-size:.72rem;color:var(--faint);}
+  .sub a{color:var(--faint);text-decoration:underline;text-underline-offset:2px;position:relative;z-index:2;}
+  .sub a:hover{color:var(--accent);}
 
-  footer{margin-top:3.5rem;padding-top:1.6rem;border-top:1px solid var(--rule);
-    font-size:.9rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;}
-  footer a{color:var(--accent);text-decoration:none;}
-  footer a:hover{text-decoration:underline;}
-  ::selection{background:var(--accent);color:var(--paper);}
+  footer{margin-top:3.6rem;padding-top:1.6rem;border-top:1px solid var(--rule);
+    font-family:var(--mono);font-size:.8rem;color:var(--faint);display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;}
+  footer a{color:var(--muted);text-decoration:none;}
+  footer a:hover{color:var(--accent);}
+  ::selection{background:var(--accent);color:#fff;}
 </style>
 </head>
 <body>
   <div class="wrap">
+
     <header>
-      <p class="handle">gauravz7</p>
-      <h1>Things I've built &amp; written.</h1>
-      <p class="tagline">Practical work on AI agents, the standards that connect them, and tools that solve real problems.</p>
+      <div class="id">
+        <span class="mark">g7</span>
+        <span class="handle"><b>gauravz7</b> · builder</span>
+      </div>
+      <h1>Practical work on <span class="u">AI agents</span> &amp; the tools around them.</h1>
+      <p class="bio">Agents, generative media, and the standards that connect them — with a bias toward things that actually ship.</p>
+      <div class="links">
+        <a href="https://github.com/gauravz7">GitHub ↗</a>
+        <a href="#projects">Projects ↓</a>
+      </div>
     </header>
 
-    <main>
-      <p class="eyebrow">Projects</p>
+    <main id="projects">
+      <p class="label">Featured</p>
       <div class="grid">
 
         <a class="card" href="/household-buddy/">
           <span class="tag">Guide · WhatsApp + Gemini</span>
           <h2>Household Buddy</h2>
           <p>A WhatsApp house-manager for two parents — one shared memory, photo parsing, and a reliable twice-daily reminder digest. A complete, step-by-step build guide.</p>
-          <span class="sub">code: <a href="https://github.com/gauravz7/household-buddy-app">household-buddy-app</a></span>
-          <span class="go">Read the guide →</span>
+          <span class="sub">code → <a href="https://github.com/gauravz7/household-buddy-app">household-buddy-app</a></span>
+          <span class="meta-row"><span class="go">Read the guide <span class="arw">→</span></span></span>
         </a>
 
         <a class="card" href="/learn-mcp/">
           <span class="tag">Primer</span>
           <h2>MCP &amp; Skills</h2>
-          <p>The two standards behind agent integrations, explained for leaders first, then builders — what they are, how they differ, and when to use each.</p>
-          <span class="go">Read the primer →</span>
+          <p>The two standards behind agent integrations, explained for leaders first, then builders — what they are, how they differ, and when to reach for each.</p>
+          <span class="meta-row"><span class="go">Read the primer <span class="arw">→</span></span></span>
         </a>
 
         <a class="card" href="/movie-studio-agent/">
           <span class="tag">Applied</span>
           <h2>The Agentic Studio</h2>
-          <p>MCP and Skills put to work — the two standards applied to build an agentic creative studio, end to end.</p>
-          <span class="go">See the walkthrough →</span>
+          <p>MCP and Skills put to work — the two standards applied end-to-end to build an agentic creative studio.</p>
+          <span class="meta-row"><span class="go">See the walkthrough <span class="arw">→</span></span></span>
         </a>
 
       </div>
     </main>
 
     <footer>
-      <span>More on GitHub:</span>
-      <a href="https://github.com/gauravz7">github.com/gauravz7 →</a>
+      <span>© gauravz7</span>
+      <a href="https://github.com/gauravz7">github.com/gauravz7</a>
+      <span>· built &amp; hosted on GitHub Pages</span>
     </footer>
+
   </div>
 </body>
 </html>
