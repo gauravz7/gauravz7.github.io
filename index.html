@@ -64,18 +64,21 @@
 
   /* project cards */
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15.5rem,1fr));gap:1.1rem;}
-  a.card{position:relative;display:flex;flex-direction:column;gap:.6rem;text-decoration:none;color:inherit;
+  .card{position:relative;display:flex;flex-direction:column;gap:.6rem;color:inherit;
     background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:1.5rem 1.6rem;
     box-shadow:var(--shadow);transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease;}
-  a.card:hover{border-color:var(--accent);transform:translateY(-3px);}
-  a.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  .card:hover{border-color:var(--accent);transform:translateY(-3px);}
+  .card:focus-within{outline:2px solid var(--accent);outline-offset:3px;}
+  /* stretched primary link: the whole card is clickable via ONE anchor — no nested <a> */
+  .card h2 a.stretch{color:inherit;text-decoration:none;}
+  .card h2 a.stretch::after{content:"";position:absolute;inset:0;z-index:1;border-radius:16px;}
   .tag{align-self:flex-start;font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.11em;
     color:var(--accent);background:var(--accent-soft);border:1px solid var(--rule);padding:.22rem .55rem;border-radius:7px;}
   .card h2{font-size:1.3rem;font-weight:750;letter-spacing:-.015em;margin:.15rem 0 0;}
   .card p{margin:0;color:var(--muted);font-size:.97rem;flex:1;}
   .meta-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.4rem;}
   .go{font-family:var(--mono);font-size:.8rem;color:var(--accent);}
-  a.card:hover .go .arw{transform:translateX(3px);}
+  .card:hover .go .arw{transform:translateX(3px);}
   .arw{display:inline-block;transition:transform .16s ease;}
   .sub{font-family:var(--mono);font-size:.72rem;color:var(--faint);}
   .sub a{color:var(--faint);text-decoration:underline;text-underline-offset:2px;position:relative;z-index:2;}
@@ -108,28 +111,28 @@
       <p class="label">Featured</p>
       <div class="grid">
 
-        <a class="card" href="/household-buddy/">
+        <article class="card">
           <span class="tag">Guide · WhatsApp + Gemini</span>
-          <h2>Household Buddy</h2>
+          <h2><a class="stretch" href="/household-buddy/">Household Buddy</a></h2>
           <p>A WhatsApp house-manager for two parents — one shared memory, photo parsing, and a reliable twice-daily reminder digest. A complete, step-by-step build guide.</p>
           <span class="sub">code → <a href="https://github.com/gauravz7/household-buddy-app">household-buddy-app</a></span>
           <span class="meta-row"><span class="go">Read the guide <span class="arw">→</span></span></span>
-        </a>
+        </article>
 
-        <a class="card" href="/learn-mcp/">
+        <article class="card">
           <span class="tag">Primer</span>
-          <h2>MCP &amp; Skills</h2>
+          <h2><a class="stretch" href="/learn-mcp/">MCP &amp; Skills</a></h2>
           <p>The two standards behind agent integrations, explained for leaders first, then builders — what they are, how they differ, and when to reach for each.</p>
           <span class="meta-row"><span class="go">Read the primer <span class="arw">→</span></span></span>
-        </a>
+        </article>
 
-        <a class="card" href="/movie-studio-agent/agentic-studio-series.html">
+        <article class="card">
           <span class="tag">Applied · 3-part series</span>
-          <h2>The Agentic Studio</h2>
+          <h2><a class="stretch" href="/movie-studio-agent/agentic-studio-series.html">The Agentic Studio</a></h2>
           <p>An AI film studio you drive in plain English — a sentence in, a multi-scene short out. A 3-part series on why the value is the orchestration layer, not the model — with a live walkthrough.</p>
           <span class="sub">code → <a href="https://github.com/gauravz7/movie-studio-agent">movie-studio-agent</a></span>
           <span class="meta-row"><span class="go">See the walkthrough <span class="arw">→</span></span></span>
-        </a>
+        </article>
 
       </div>
     </main>
