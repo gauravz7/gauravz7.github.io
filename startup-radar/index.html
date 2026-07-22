@@ -66,6 +66,12 @@
     padding:1.1rem 1.25rem;overflow-x:auto;margin:0 0 1.4rem;line-height:1.55;}
   pre code{background:none;border:none;padding:0;font-size:.82rem;color:var(--ink);}
 
+  figure.diagram{margin:0 0 1.5rem;background:var(--surface);border:1px solid var(--rule);
+    border-radius:12px;box-shadow:var(--shadow);padding:1.3rem 1rem .9rem;overflow-x:auto;}
+  figure.diagram .mermaid{display:flex;justify-content:center;min-width:min-content;}
+  figure.diagram figcaption{font-family:var(--mono);font-size:.72rem;color:var(--faint);
+    text-align:center;margin-top:.7rem;}
+
   table{width:100%;border-collapse:collapse;margin:0 0 1.5rem;font-size:.92rem;}
   th,td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top;}
   th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:600;}
@@ -93,6 +99,24 @@
       <p>We built an internal tool that turns a company name into a scored, sourced sales brief: funding signals, AI stack, competitive exposure, a paste-ready first email. The first version worked but took two to three minutes per company — too slow to use while a sales conversation is still live, and its scores drifted run to run because a language model was doing the scoring.</p>
       <p>The rewrite (Startup Radar) lands a single company in 45–90 seconds and produces the <em>same</em> score every time for the same inputs. The speed came from restructuring the pipeline. The repeatability came from a design decision that matters more: <strong>we stopped asking the model to do the parts that code does better.</strong> This is what we changed and where it bit us.</p>
 
+      <h2>The shape, end to end</h2>
+      <p>One Cloud Run container serves the Next.js frontend and the FastAPI backend. A request becomes a job, the orchestrator runs the pipeline behind a shared throttle, and every model call, web fetch, and score writes through to Firestore so reports survive scale-to-zero. Progress streams back to the browser over SSE the whole time.</p>
+      <figure class="diagram">
+        <pre class="mermaid">
+flowchart TD
+    B["Browser · Next.js 15<br/>SSE client"] -->|"POST /api/jobs · /api/batch"| API["FastAPI (uvicorn)"]
+    API --> BUS["Progress bus<br/>SSE pub/sub"]
+    API --> ORCH["Orchestrator<br/>5 stages · bounded semaphore"]
+    ORCH --> TH["GeminiThrottle<br/>QPS bucket + concurrency cap"]
+    TH --> G["Vertex AI · Gemini"]
+    ORCH --> PW["Playwright<br/>fetch + screenshots"]
+    ORCH --> SC["Deterministic layer<br/>vendor regex + priority score"]
+    ORCH --> FS[("Firestore<br/>cache + reports")]
+    BUS -.->|"stage / log events"| B
+        </pre>
+        <figcaption>Architecture — one container, one throttle in front of every model call.</figcaption>
+      </figure>
+
       <h2>The mental model: LLMs extract, code decides</h2>
       <p>The original tool ran a seven-stage sequential chain of LLM calls, and the model was responsible for everything — including the final priority score and the "who are they competing with" call. That's two jobs a language model is bad at. Scoring needs to be reproducible and auditable; the model gave us neither. Detecting a competitor's name in a blob of text is a string-matching problem; handing it to an LLM adds latency, cost, and a chance of hallucination.</p>
       <p>So we drew a hard line. The model does what only it can — disambiguate an entity, read a screenshot, synthesize prose. Deterministic Python does everything with a right answer. Concretely, the pipeline is five stages, and only three of them call Gemini for judgment:</p>
@@ -106,7 +130,36 @@
           <tr><td>5</td><td><strong>Pitch Playbook</strong></td><td>Gemini writes the email, hooks, objections</td></tr>
         </tbody>
       </table>
-      <p>Scoring is a pure function that runs after stage 5 — no model in the loop.</p>
+      <p>Scoring is a pure function that runs after stage 5 — no model in the loop. Here's one company moving through it, cache check first:</p>
+      <figure class="diagram">
+        <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as Browser
+    participant O as Orchestrator
+    participant C as Firestore cache
+    participant G as Gemini (throttled)
+    participant P as Playwright
+    U->>O: POST /api/jobs {company}
+    O->>C: cache.get(slug)
+    alt cache hit
+        C-->>O: Report
+        O-->>U: SSE done · from cache
+    else miss
+        O->>G: 1 · Disambiguate (grounded)
+        O->>G: 2 · Asset Find ×8 (asyncio.gather)
+        O->>P: 3 · Deep Inspect — fetch + screenshots
+        P-->>O: page snapshots
+        O->>G: 3 · visual narrative (multimodal)
+        O->>G: 4 · AI Intel (synthesis)
+        Note over O: deterministic vendor regex<br/>+ priority score
+        O->>G: 5 · Pitch Playbook
+        O->>C: write-through report
+        O-->>U: SSE done · {tier, score}
+    end
+        </pre>
+        <figcaption>Per-company sequence — cache short-circuits; stage 2 fans out; every Gemini call is throttled.</figcaption>
+      </figure>
 
       <h2>Deterministic scoring, so the number means something</h2>
       <p>The priority score is a pure function of extracted fields, capped at 100:</p>
@@ -177,5 +230,23 @@ except Exception as e:
       <span>· built &amp; hosted on GitHub Pages</span>
     </footer>
   </div>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: dark ? "dark" : "neutral",
+      securityLevel: "loose",
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+      themeVariables: {
+        primaryColor: dark ? "#161B18" : "#FFFFFF",
+        primaryTextColor: dark ? "#EAEBE5" : "#181C1A",
+        primaryBorderColor: dark ? "#46B9A8" : "#0C7A6D",
+        lineColor: dark ? "#46B9A8" : "#0C7A6D",
+        fontSize: "13px",
+      },
+    });
+  </script>
 </body>
 </html>
