@@ -72,6 +72,12 @@
   figure.diagram figcaption{font-family:var(--mono);font-size:.72rem;color:var(--faint);
     text-align:center;margin-top:.7rem;}
 
+  figure.shot{margin:0 0 1.5rem;}
+  figure.shot img{display:block;width:100%;height:auto;border:1px solid var(--rule);
+    border-radius:12px;box-shadow:var(--shadow);}
+  figure.shot figcaption{font-family:var(--mono);font-size:.72rem;color:var(--faint);
+    text-align:center;margin-top:.7rem;}
+
   table{width:100%;border-collapse:collapse;margin:0 0 1.5rem;font-size:.92rem;}
   th,td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top;}
   th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:600;}
@@ -98,6 +104,11 @@
     <article>
       <p>We built an internal tool that turns a company name into a scored, sourced sales brief: funding signals, AI stack, competitive exposure, a paste-ready first email. The first version worked but took two to three minutes per company — too slow to use while a sales conversation is still live, and its scores drifted run to run because a language model was doing the scoring.</p>
       <p>The rewrite (Startup Radar) lands a single company in 45–90 seconds and produces the <em>same</em> score every time for the same inputs. The speed came from restructuring the pipeline. The repeatability came from a design decision that matters more: <strong>we stopped asking the model to do the parts that code does better.</strong> This is what we changed and where it bit us.</p>
+
+      <figure class="shot">
+        <img src="media/01-landing.png" alt="Startup Radar landing page: a country picker, a company-name input, and a one-line promise to qualify a week's leads in under 100 seconds, with a 5-stage pipeline summarized below." loading="lazy">
+        <figcaption>The whole product is one screen — pick a market, drop in names, get scored briefs. One pass: disambiguate, map assets, score fit, draft the email.</figcaption>
+      </figure>
 
       <h2>The shape, end to end</h2>
       <p>One Cloud Run container serves the Next.js frontend and the FastAPI backend. A request becomes a job, the orchestrator runs the pipeline behind a shared throttle, and every model call, web fetch, and score writes through to Firestore so reports survive scale-to-zero. Progress streams back to the browser over SSE the whole time.</p>
@@ -159,6 +170,17 @@ sequenceDiagram
     end
         </pre>
         <figcaption>Per-company sequence — cache short-circuits; stage 2 fans out; every Gemini call is throttled.</figcaption>
+      </figure>
+
+      <h2>Inside the five prompts: personas, guardrails, and a rubric the code overrules</h2>
+      <p>If the harness is where reliability lives, the prompts are where the judgment lives — and they're the part we spent the most words on. None of them says "analyze this company." Each stage runs as a named specialist with one job, a strict output schema, and explicit instructions about what it may <em>not</em> do. Three ideas carry most of the weight.</p>
+      <p><strong>A persona per stage, not one do-everything agent.</strong> Disambiguation runs as a regional company-registry specialist that knows a Singapore entity and its mainland-China parent are different rows. Asset Find runs as an asset mapper whose whole job is turning eight noisy search blobs into typed fields. Deep Inspect runs as a web-intelligence analyst reading screenshots; Intel runs as a VC-style researcher; the pitch runs as a business writer. Narrow personas keep each call's output shape predictable, which is exactly what lets the next stage — and its schema — depend on it.</p>
+      <p><strong>Grounded search with the anti-hallucination guardrails in the prompt, not bolted on after.</strong> The disambiguation prompt forces the model to return a confidence between 0 and 1 and to list the other candidates it considered before committing to one. When confidence is low, the harness re-searches with a tighter query instead of building a whole report on a shaky identity. The instruction that earns its keep most is the blunt one: if you can't find evidence, say so — don't invent it. A grounded model allowed to answer "I don't know" is worth more than a confident one that fills the gap.</p>
+      <p><strong>A lenient rubric in the prompt that the code then overrules.</strong> This is the subtle one. The Intel prompt carries a scoring rubric — but its job isn't to produce the final number, it's to make the model <em>extract generously and consistently</em>: pull the funding figure, tag the product category, name the inferred AI stack, flag the competitive exposure. Then the deterministic scorer throws the model's number away and recomputes from those extracted fields. The model is a lenient, consistent reader; the code is the strict, reproducible judge. Handing the model a rubric steadies its <em>extraction</em>; refusing to trust its <em>arithmetic</em> makes the score reproducible. We get both at once.</p>
+      <p>Everything downstream is evidence-bound. The pitch stage can only reference assets and signals the earlier stages actually found, and it's told to work from that evidence rather than editorialize past it — the same reason competitive detection emits the exact matched string. All of this is boring on purpose: a report a salesperson can trust is one where every claim traces back to something the pipeline actually saw.</p>
+      <figure class="shot">
+        <img src="media/09-run-progress.png" alt="A live run in progress: stage tabs (Disambiguate and Asset Find done, Deep Inspect active), a note that 8 parallel grounded searches are running, a timestamped event log, and a collapsible raw backend trace below." loading="lazy">
+        <figcaption>A live run — stage tabs up top, the eight parallel grounded searches mid-flight, and the raw backend trace below. Every step is streamed, not a black box.</figcaption>
       </figure>
 
       <h2>Deterministic scoring, so the number means something</h2>
