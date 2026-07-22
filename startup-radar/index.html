@@ -51,6 +51,8 @@
   .lede{font-size:1.16rem;color:var(--muted);margin:0 0 1rem;text-wrap:pretty;}
   .byline{font-family:var(--mono);font-size:.76rem;color:var(--faint);margin:0 0 2.6rem;
     padding-bottom:1.6rem;border-bottom:1px solid var(--rule);}
+  .byline a{color:var(--accent);text-decoration:none;}
+  .byline a:hover{text-decoration:underline;}
 
   article h2{font-size:1.5rem;font-weight:760;letter-spacing:-.018em;line-height:1.2;margin:2.8rem 0 .9rem;text-wrap:balance;}
   article p{margin:0 0 1.15rem;color:var(--ink);}
@@ -99,7 +101,7 @@
     <span class="tag">Engineering deep-dive</span>
     <h1>Use AI agents to qualify AI leads in seconds</h1>
     <p class="lede">A technical deep-dive on Startup Radar: turning a company name into a scored, sourced sales brief in under 90 seconds — by splitting LLM extraction from deterministic scoring and hand-rolling a resilient harness, with the tradeoffs named.</p>
-    <p class="byline">gauravz7 · engineering</p>
+    <p class="byline">gauravz7 · engineering · <a href="https://github.com/gauravz7/startup-radar-v2">code on GitHub ↗</a></p>
 
     <article>
       <p>We built an internal tool that turns a company name into a scored, sourced sales brief: funding signals, AI stack, competitive exposure, a paste-ready first email. The first version worked but took two to three minutes per company — too slow to use while a sales conversation is still live, and its scores drifted run to run because a language model was doing the scoring.</p>
