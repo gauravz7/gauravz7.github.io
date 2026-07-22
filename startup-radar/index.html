@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How we made startup research 3× faster — Startup Radar</title>
+<meta name="description" content="A deep-dive on Startup Radar: collapsing a 7-stage agent chain, splitting LLM extraction from deterministic scoring, throttling shared model backends, and hand-rolling a resilient harness — with the tradeoffs named.">
+
+<!-- social share cards -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://gauravz7.github.io/startup-radar/">
+<meta property="og:title" content="How we made startup research 3× faster — and more repeatable">
+<meta property="og:description" content="LLMs extract, code decides. Collapsing a 7-stage agent chain, throttling shared model backends, and hand-rolling a resilient harness — tradeoffs included.">
+<meta property="og:image" content="https://gauravz7.github.io/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How we made startup research 3× faster">
+<meta name="twitter:description" content="An engineering deep-dive on the Startup Radar agent and the harness around it.">
+<meta name="twitter:image" content="https://gauravz7.github.io/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+
+<style>
+  :root{
+    --paper:#F6F5F1; --surface:#FFFFFF; --ink:#181C1A; --muted:#5F675F; --faint:#8A9188;
+    --accent:#0C7A6D; --accent-2:#C98A2B; --accent-soft:#0c7a6d10; --rule:#E5E3DB; --shadow:0 1px 2px rgba(20,30,26,.04),0 10px 30px -12px rgba(20,30,26,.12);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#0E1210;--surface:#161B18;--ink:#EAEBE5;--muted:#9AA095;--faint:#6E766C;
+      --accent:#46B9A8;--accent-2:#E0AF5C;--accent-soft:#46b9a814;--rule:#252C27;--shadow:0 1px 2px rgba(0,0,0,.3),0 14px 40px -16px rgba(0,0,0,.55);}
+  }
+  :root[data-theme="light"]{--paper:#F6F5F1;--surface:#FFFFFF;--ink:#181C1A;--muted:#5F675F;--faint:#8A9188;--accent:#0C7A6D;--accent-2:#C98A2B;--accent-soft:#0c7a6d10;--rule:#E5E3DB;}
+  :root[data-theme="dark"]{--paper:#0E1210;--surface:#161B18;--ink:#EAEBE5;--muted:#9AA095;--faint:#6E766C;--accent:#46B9A8;--accent-2:#E0AF5C;--accent-soft:#46b9a814;--rule:#252C27;}
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.7;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    background-image:radial-gradient(120% 60% at 100% 0%, var(--accent-soft), transparent 60%);
+    background-repeat:no-repeat;}
+  .wrap{max-width:46rem;margin:0 auto;padding:clamp(2.4rem,6vw,4.5rem) 1.5rem 4rem;}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+
+  .back{font-family:var(--mono);font-size:.8rem;text-decoration:none;color:var(--muted);display:inline-block;margin-bottom:2rem;}
+  .back:hover{color:var(--accent);}
+
+  .tag{display:inline-block;font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.11em;
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--rule);padding:.24rem .6rem;border-radius:7px;margin-bottom:1.2rem;}
+
+  h1{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:800;letter-spacing:-.028em;line-height:1.1;
+    margin:0 0 1rem;text-wrap:balance;}
+  .lede{font-size:1.16rem;color:var(--muted);margin:0 0 1rem;text-wrap:pretty;}
+  .byline{font-family:var(--mono);font-size:.76rem;color:var(--faint);margin:0 0 2.6rem;
+    padding-bottom:1.6rem;border-bottom:1px solid var(--rule);}
+
+  article h2{font-size:1.5rem;font-weight:760;letter-spacing:-.018em;line-height:1.2;margin:2.8rem 0 .9rem;text-wrap:balance;}
+  article p{margin:0 0 1.15rem;color:var(--ink);}
+  article strong{font-weight:680;}
+  article a{color:var(--accent);text-underline-offset:2px;}
+  article ol,article ul{margin:0 0 1.15rem;padding-left:1.3rem;}
+  article li{margin:.4rem 0;}
+  article li::marker{color:var(--faint);}
+
+  code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);border:1px solid var(--rule);
+    padding:.08em .38em;border-radius:5px;}
+  pre{background:var(--surface);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow);
+    padding:1.1rem 1.25rem;overflow-x:auto;margin:0 0 1.4rem;line-height:1.55;}
+  pre code{background:none;border:none;padding:0;font-size:.82rem;color:var(--ink);}
+
+  table{width:100%;border-collapse:collapse;margin:0 0 1.5rem;font-size:.92rem;}
+  th,td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:600;}
+  td code{font-size:.8em;}
+
+  hr{border:none;border-top:1px solid var(--rule);margin:2.4rem 0;}
+
+  footer{margin-top:3.4rem;padding-top:1.6rem;border-top:1px solid var(--rule);
+    font-family:var(--mono);font-size:.8rem;color:var(--faint);display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;}
+  footer a{color:var(--muted);text-decoration:none;}
+  footer a:hover{color:var(--accent);}
+  ::selection{background:var(--accent);color:#fff;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">← gauravz7</a>
+
+    <span class="tag">Engineering deep-dive</span>
+    <h1>How we made startup research 3× faster — and more repeatable — by not asking the model to do everything</h1>
+    <p class="lede">Collapsing a 7-stage agent chain into a 5-stage fan-out, splitting LLM extraction from deterministic scoring, and hand-rolling a resilient harness — with the tradeoffs named.</p>
+    <p class="byline">gauravz7 · engineering</p>
+
+    <article>
+      <p>We built an internal tool that turns a company name into a scored, sourced sales brief: funding signals, AI stack, competitive exposure, a paste-ready first email. The first version worked but took two to three minutes per company — too slow to use while a sales conversation is still live, and its scores drifted run to run because a language model was doing the scoring.</p>
+      <p>The rewrite (Startup Radar) lands a single company in 45–90 seconds and produces the <em>same</em> score every time for the same inputs. The speed came from restructuring the pipeline. The repeatability came from a design decision that matters more: <strong>we stopped asking the model to do the parts that code does better.</strong> This is what we changed and where it bit us.</p>
+
+      <h2>The mental model: LLMs extract, code decides</h2>
+      <p>The original tool ran a seven-stage sequential chain of LLM calls, and the model was responsible for everything — including the final priority score and the "who are they competing with" call. That's two jobs a language model is bad at. Scoring needs to be reproducible and auditable; the model gave us neither. Detecting a competitor's name in a blob of text is a string-matching problem; handing it to an LLM adds latency, cost, and a chance of hallucination.</p>
+      <p>So we drew a hard line. The model does what only it can — disambiguate an entity, read a screenshot, synthesize prose. Deterministic Python does everything with a right answer. Concretely, the pipeline is five stages, and only three of them call Gemini for judgment:</p>
+      <table>
+        <thead><tr><th>#</th><th>Stage</th><th>Who does the work</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>Disambiguate</strong></td><td>Gemini (grounded) — resolve "BOLT" to a real legal entity</td></tr>
+          <tr><td>2</td><td><strong>Asset Find</strong></td><td>Gemini × 8 parallel grounded searches — site, GitHub, app stores, funding, hiring, news, social</td></tr>
+          <tr><td>3</td><td><strong>Deep Inspect</strong></td><td>Playwright fetch + screenshots → Gemini reads the images and writes a positioning paragraph</td></tr>
+          <tr><td>4</td><td><strong>AI Intel</strong></td><td>Gemini synthesizes; then <strong>deterministic regex</strong> scores competitive exposure</td></tr>
+          <tr><td>5</td><td><strong>Pitch Playbook</strong></td><td>Gemini writes the email, hooks, objections</td></tr>
+        </tbody>
+      </table>
+      <p>Scoring is a pure function that runs after stage 5 — no model in the loop.</p>
+
+      <h2>Deterministic scoring, so the number means something</h2>
+      <p>The priority score is a pure function of extracted fields, capped at 100:</p>
+      <pre><code>funding_score = min(50, latest_funding_usd / 1_000_000)
+ai_fit_score  = 25 if gen_ai_native or a GenAI product category
+recency_score = 15 / 8 / 3 by how recent the latest momentum signal is (90/180/365d)
+hiring_score  = min(10, ai_ml_open_roles)</code></pre>
+      <p>Tiers fall out of thresholds: <code>SUPER_HIGH</code> needs ≥ $5M raised, a round within 180 days, <em>and</em> a total ≥ 60; otherwise <code>HIGH</code> ≥ 50, <code>MEDIUM</code> ≥ 25, <code>LOW</code> below.</p>
+      <p>The payoff isn't accuracy in the abstract — it's that the same company scores identically on every run, a salesperson can see <em>why</em> it scored 62, and we can change the rubric by editing a formula instead of re-tuning a prompt and re-checking every past report. The cost is honest: the score is only as good as the fields the model extracted. If Gemini misses a funding round, deterministic math will confidently score the miss. We pushed the hard problem (extraction) to the model and kept the easy-but-must-be-right problem (arithmetic) in code — but we didn't make extraction any easier.</p>
+
+      <h2>Competitive detection is regex, not a judgment call</h2>
+      <p>Stage 4's most useful output is "which third-party AI vendors a company is already using" — the competitive displacement angle. That's ~30 weighted patterns run over every piece of collected text:</p>
+      <pre><code>(r"\bopenai\b|\bgpt-?[345]\b|\bchat-?gpt\b", "OpenAI / GPT-*", 35),
+(r"\banthropic\b|\bclaude(?:-3)?\b",          "Anthropic / Claude", 35),
+(r"\bamazon\s+bedrock\b",                     "AWS Bedrock", 30),
+(r"\belevenlabs\b",                           "ElevenLabs (voice)", 22),
+(r"\bcursor\.(?:com|so)\b",                   "Cursor", 22),
+# …and ~25 more, each with a weight</code></pre>
+      <p>A second, smaller pattern set scans for our own platform's footprint and <em>lowers</em> the exposure score — a company already on it isn't a swap target. Every match emits an evidence string, so the report shows the exact text that triggered "AWS Bedrock", not an unsourced assertion. This is faster, free, and auditable in a way an LLM classifier is not. It's also brittle by nature: a vendor we haven't added a pattern for is invisible, so the list is a living file, not a finished one.</p>
+
+      <h2>The concurrency bug you only hit after you fan out</h2>
+      <p>Speed came from parallelism, and parallelism is where it got interesting. Inside one company, stage 2 fires 8 grounded searches at once with <code>asyncio.gather</code>. Across a batch, the orchestrator runs 5 companies concurrently behind a <code>Semaphore</code>. Multiply it out: <strong>up to 40 in-flight Gemini calls</strong>, plus the per-company synthesis and vision calls on top.</p>
+      <p>Vertex started returning 429s well below the documented quota. The reason took a while to find: the grounded-search backend, the chat backend, and the multimodal backend draw from shared underlying pools, so "requests per minute" on paper isn't the ceiling you actually hit when you spread load across all three at once. Per-stage rate limiting didn't help, because no single stage was over its limit.</p>
+      <p>The fix is one process-wide throttle every Gemini call passes through, combining a concurrency cap and a QPS token bucket — and the acquisition order matters:</p>
+      <pre><code>async def __aenter__(self):
+    await gemini_semaphore().acquire()      # get a concurrency slot FIRST
+    try:
+        await gemini_limiter().__aenter__() # THEN spend a QPS token
+    except BaseException:
+        gemini_semaphore().release()
+        raise</code></pre>
+      <p>Grab the semaphore first, spend a rate-limit token second. Reverse it and you burn QPS tokens on calls that are still queued for a concurrency slot — you rate-limit work that isn't even running yet. Same two limits, wrong order, and throughput drops. Underneath, every call is still wrapped in exponential backoff on 429/503, because a shared throttle reduces contention but doesn't make a distributed quota perfectly predictable.</p>
+
+      <h2>The agent is five prompts; the harness is everything else</h2>
+      <p>The original tool used a framework's sequential-agent primitive: declare seven stages, let the framework run them in order. It was quick to stand up and it's why we shipped a v1 at all. It's also why v1 was slow and fragile — the framework owned the control flow, so concurrency, per-stage failure handling, timeouts, and mid-run recovery were whatever the framework decided, which was "run them one at a time, and if one throws, the run dies."</p>
+      <p>For v2 we kept the <em>agent</em> small — five prompts and their structured-output schemas — and hand-wrote the harness around them. That's the trade at the center of this project: <strong>we gave up the framework's convenience to own the failure modes.</strong> The agent is the easy part. The harness is where the engineering lives, and it's four decisions, each with a cost.</p>
+      <p><strong>Graceful degradation over all-or-nothing.</strong> In v1, a transient hiccup in stage 4 lost the whole company. Now stages 3–5 catch their own exceptions and emit a partial result — an empty intel object, a "pitch skipped" note — so the report writes with whatever the earlier stages produced:</p>
+      <pre><code>try:
+    intel = await ai_intel(disambig, assets, inspection)
+except Exception as e:
+    intel = AISalesIntel(deep_search_narrative=f"intel synthesis skipped: {e}")
+    await event(4, "ai_intel", "done", f"degraded: {str(e)[:160]}")</code></pre>
+      <p>The cost is real and we don't love it: a degraded report can <em>look</em> complete. We mark <code>needs_review</code> and surface the "degraded" note in the trace, but a rushed reader can still miss that stage 4 was empty. We decided a partial brief the salesperson can act on beats a hard failure that gives them nothing — but that's a judgment call, not a free win.</p>
+      <p><strong>A hard per-company timeout.</strong> Fan-out has a failure mode you don't see until you're running batches: a single Vertex call stuck in its retry loop holds a concurrency slot forever, silently shrinking the parallel pool one company at a time. Every company is wrapped in <code>asyncio.wait_for(PER_COMPANY_TIMEOUT_S)</code> (900s). The tradeoff is picking the number: too low and you kill legitimately slow companies in a big batch; too high and a genuine hang wastes a slot for fifteen minutes. We landed on 900s after 300s started killing real work — measured, not guessed, and still just a compromise.</p>
+      <p><strong>Two independent layers against 429s.</strong> The shared throttle from the last section <em>prevents</em> most rate-limit errors; the retry helper <em>recovers</em> from the ones that slip through, with exponential backoff and jitter (1s, 2s, 4s, 8s, 16s, ~30s worst case). The deliberate part is what we <em>don't</em> retry — only 429 and 5xx are treated as transient. A 400, 401, or 404 surfaces immediately, because retrying a wrong-model or bad-auth error just hides a real bug behind thirty seconds of backoff. Belt and suspenders on transient failures; fail-fast on everything else.</p>
+      <p><strong>Restartable batches, at one write per company.</strong> Cloud Run scales to zero and recycles instances, so a batch has to survive its host dying. After every company we persist the batch record — full company list plus a completion counter — to Firestore, and a startup hook picks up unfinished batches on the next boot. We also chunk the batch and <code>gc.collect()</code> between chunks rather than pre-creating 8,000 coroutines up front, which would OOM the container. Both cost something: an extra Firestore write per company, and a small barrier between chunks where the slowest company stalls its chunk. For a job that runs for hours across restarts, we'll take both.</p>
+      <p>The through-line: a framework's sequential agent is the right call to prove the idea, and the wrong call once uptime, latency, and partial-failure behavior are the product. Moving the control flow into our own harness cost us the framework's guardrails and made us write our own — but every failure mode above is now a decision we made on purpose instead of one we inherited.</p>
+
+      <h2>Structured output, so failures are loud</h2>
+      <p>The old tool asked for free text and pulled fields out with regex against markers like <code>[SCORES]</code>. It worked until the model rephrased something and a field came back empty — silently, then wrong, downstream. The rewrite uses Gemini's structured-output mode with Pydantic v2 models, validated at the boundary. A missing field now fails at the source instead of surfacing as a blank cell in someone's spreadsheet three steps later. This bought us zero speed and a lot of trust, which is the trade we'd make again.</p>
+
+      <h2>The cache makes the 23K-row run restartable</h2>
+      <p>Both tools share one Firestore cache, keyed by a normalized company name, and we kept that key byte-compatible on purpose. When we scored a 23,176-company partner list into a separate collection, the cache short-circuit made restarts free: a worker dies at row 12,000, we re-run the same script, it skips everything already scored and continues. The batch scripts also <em>hard-refuse</em> to write to the production <code>companies</code> collection — isolation enforced in code, not in a runbook, because runbooks get skipped at 2 a.m. The CSV export stays byte-identical to the legacy tool's column order, so existing sheets never broke during the migration.</p>
+
+      <h2>What we'd tell someone building the same thing</h2>
+      <p>The faster model everyone assumes was the fix was the least of it. The wins were architectural, and they generalize:</p>
+      <ol>
+        <li><strong>Split the work by what has a right answer.</strong> Let the model extract and synthesize; keep scoring and matching in deterministic code you can read, test, and reproduce.</li>
+        <li><strong>Throttle shared model backends as one pool, and mind the acquisition order.</strong> Fan-out exposes quota behavior that per-stage limits can't see; take the concurrency slot before the rate-limit token.</li>
+        <li><strong>Make outputs structured and cache keys stable.</strong> Structured output turns silent failures loud; a stable key turns restarts and migrations into non-events.</li>
+      </ol>
+      <p>If your research agent is too slow <em>and</em> too inconsistent, those are usually the same bug: too much asked of the model, in too long a line. Move the deterministic parts into code, fan out the I/O, and throttle it as one — then a smarter prompt is a bonus, not the load-bearing wall.</p>
+    </article>
+
+    <footer>
+      <span>© gauravz7</span>
+      <a href="https://github.com/gauravz7">github.com/gauravz7</a>
+      <span>· built &amp; hosted on GitHub Pages</span>
+    </footer>
+  </div>
+</body>
+</html>
