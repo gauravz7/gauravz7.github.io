@@ -80,6 +80,13 @@
   figure.shot figcaption{font-family:var(--mono);font-size:.72rem;color:var(--faint);
     text-align:center;margin-top:.7rem;}
 
+  .callout{background:var(--accent-soft);border:1px solid var(--rule);border-left:3px solid var(--accent);
+    border-radius:12px;padding:1.15rem 1.35rem .5rem;margin:0 0 1.4rem;box-shadow:var(--shadow);}
+  .callout .callout-title{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--accent);margin:0 0 .7rem;font-weight:600;}
+  .callout ul{margin:0 0 .9rem;padding-left:1.2rem;}
+  .callout li{margin:.5rem 0;}
+
   table{width:100%;border-collapse:collapse;margin:0 0 1.5rem;font-size:.92rem;}
   th,td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top;}
   th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:600;}
@@ -173,6 +180,24 @@ sequenceDiagram
         </pre>
         <figcaption>Per-company sequence — cache short-circuits; stage 2 fans out; every Gemini call is throttled.</figcaption>
       </figure>
+
+      <h2>What the agent actually searches for</h2>
+      <p>This is the heart of the report, and it's the part most write-ups skip. Stage 2 is a single fan-out of <strong>eight grounded searches fired at once</strong>, each a narrow specialist pulling one class of signal. Nothing in the final brief is asserted unless one of these searches — or the two inputs that bracket them — actually found it.</p>
+      <div class="callout">
+        <p class="callout-title">The eight-way research fan-out</p>
+        <ul>
+          <li><strong>Official site &amp; domain</strong> — the homepage and product pages: what they say they do, in their own words.</li>
+          <li><strong>Product &amp; category</strong> — what they actually build, the GenAI use-case, and whether the product is AI-native or AI-assisted.</li>
+          <li><strong>Funding &amp; investors</strong> — rounds, amounts, dates, lead investors — the numbers the priority score leans on hardest.</li>
+          <li><strong>Hiring signals</strong> — open AI/ML roles, a live proxy for how much they're investing in building right now.</li>
+          <li><strong>News &amp; press</strong> — launches, partnerships, and momentum in the last 90–365 days (which the recency score reads).</li>
+          <li><strong>Code footprint</strong> — public repositories and open-source activity that reveal the real, shipped stack.</li>
+          <li><strong>App presence</strong> — mobile-app listings, ratings, and review volume as a demand and traction signal.</li>
+          <li><strong>Social &amp; community</strong> — the channels they're active on and how they position to their own users.</li>
+        </ul>
+      </div>
+      <p>Two more inputs bracket the fan-out. <strong>Before</strong> it, disambiguation pins every search to the right legal entity — including the Singapore-vs-mainland-China duality check, so a regional subsidiary is never confused with its parent. <strong>After</strong> it, Deep Inspect fetches the live site with a headless browser, screenshots it, and the model reads those images to write a positioning paragraph grounded in what the page actually shows — not in what the company claims in a press release. Finally, every blob of collected text is swept for third-party AI vendors, turning "what stack are they on" into a sourced, matchable fact rather than a guess.</p>
+      <p>The discipline that makes this trustworthy: <strong>each signal carries its evidence.</strong> A funding figure keeps its source, a detected vendor keeps the exact matched string, and anything a search couldn't find is recorded as absent instead of invented. The comprehensive report is really just these signals, gathered in parallel and made to cite themselves.</p>
 
       <h2>Inside the five prompts: personas, guardrails, and a rubric the code overrules</h2>
       <p>If the harness is where reliability lives, the prompts are where the judgment lives — and they're the part we spent the most words on. None of them says "analyze this company." Each stage runs as a named specialist with one job, a strict output schema, and explicit instructions about what it may <em>not</em> do. Three ideas carry most of the weight.</p>
