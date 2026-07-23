@@ -24,23 +24,38 @@
   footer{margin-top:3rem;padding-top:1.2rem;border-top:3px solid #E5318A;
     color:#555555;font-size:.85rem}
   footer a{color:#E5318A;text-decoration:none}
-</style></head>
+  .ml-onclick-form button{background:#E5318A;color:#fff;border:0;border-radius:8px;
+    padding:.7rem 1.4rem;font-size:1rem;font-weight:700;cursor:pointer}
+  .ml-onclick-form button:hover{opacity:.9}
+</style>
+<!-- MailerLite Universal -->
+<script>
+    (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
+    .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
+    n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
+    (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
+    ml('account', '2523453');
+</script>
+<!-- End MailerLite Universal -->
+</head>
 <body><div class="wrap">
   <div class="kicker">Newsletter</div>
   <h1>AI-Agent Research Digest</h1>
   <p class="lede">Top AI-agent research papers + the week&#x27;s AI news — image-forward, cited, and fact-checked. Twice a week.</p>
 
   <div class="sub">
-    <h3>Subscribe — delivered Mondays &amp; Thursdays</h3>
-    <!-- MAILERLITE FORM: paste your MailerLite embedded-form snippet here -->
-    <p style="margin:.2em 0;color:#555555;font-size:.9rem">
-      Signup form goes here (MailerLite embed).</p>
-    <p class="rss">Or subscribe by feed: <a href="https://gauravz7.github.io/digest/rss.xml">RSS</a></p>
+    <h3>Subscribe — a fresh AI-agent research digest, delivered daily</h3>
+    <p style="margin:.2em 0 .9rem;color:#555555;font-size:.9rem">
+      Top arXiv AI-agent papers + the week's AI news, summarized to your inbox.</p>
+    <span class="ml-onclick-form">
+      <button onclick="ml('show', 'mbMpBz', true)">Subscribe free →</button>
+    </span>
+    <p class="rss" style="margin-top:.9rem">Or subscribe by feed: <a href="https://gauravz7.github.io/digest/rss.xml">RSS</a></p>
   </div>
 
   <p class="kicker" style="font-size:11px">Archive</p>
   <ul class="issues">
-    <li><a href="https://gauravz7.github.io/digest/2026-07-23/"><span class="d">2026-07-23</span><span class="t">AI-Agent Digest · 2026-07-23 — Twin Agent Slashes Prompt Injection Attack Success by 68% While Maintaining 94% Task Utility</span></a></li>
+    <li><a href="https://gauravz7.github.io/digest/2026-07-23/"><span class="d">2026-07-23</span><span class="t">AI-Agent Digest · 2026-07-23 — Twin Agent Slashes Prompt Injection Attack Success by up to 88% While Maintaining 95% Task Utility</span></a></li>
 <li><a href="https://gauravz7.github.io/digest/2026-07-21/"><span class="d">2026-07-21</span><span class="t">AI-Agent Digest · 2026-07-21 — Multi-Turn Adaptive Attacks Drive Attack Success Rates from 1% to 14% in LLM Agent Security</span></a></li>
   </ul>
 
